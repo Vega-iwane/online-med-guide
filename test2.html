@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>オンライン服薬指導｜5枚スマホページ</title>
+<style>
+  :root{
+    --navy:#0B3558; --blue:#1665C1; --blue-600:#12539C;
+    --bluegray:#5A6B7C; --bluegray-200:#E8EEF3; --gray:#9AA5B1;
+    --white:#FFFFFF; --shadow:0 6px 20px rgba(11,53,88,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font-family:"BIZ UDPGothic","Noto Sans JP","Yu Gothic","Hiragino Kaku Gothic ProN","Meiryo","Segoe UI",Arial,sans-serif;
+    color:var(--navy); background:linear-gradient(180deg,#F7FAFE,#F0F4F9);
+    -webkit-font-smoothing:antialiased; overflow:hidden;
+  }
+  .app{height:100svh; max-width:480px; margin:0 auto; position:relative; background:var(--white); box-shadow:var(--shadow)}
+
+  /* ページ状態 */
+  input[type="radio"]{display:none}
+  .slides{height:100%;position:relative}
+
+  /* 画面の初期状態は非表示 */
+  .screen{
+    position:absolute; inset:0;
+    display:none;                          /* ← これが重要 */
+    padding:clamp(16px,4vw,24px);
+    background:radial-gradient(1200px 600px at 50% -400px,#EAF3FF 0%,transparent 60%),var(--white);
+    flex-direction:column; gap:clamp(10px,2.5vw,16px);
+  }
+  /* チェック時だけ表示 */
+  #p1:checked ~ .slides #s1{display:flex}
+  #p2:checked ~ .slides #s2{display:flex}
+  #p3:checked ~ .slides #s3{display:flex}
+  #p4:checked ~ .slides #s4{display:flex}
+  #p5:checked ~ .slides #s5{display:flex}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:clamp(16px,4.5vw,20px)}
+  .brand .dot{width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-600));box-shadow:0 2px 6px rgba(22,101,193,.35)}
+  h1{margin:2px 0 0;font-size:clamp(18px,5.8vw,28px);line-height:1.25;letter-spacing:.02em}
+
+  .illust{
+    position:relative;background:var(--bluegray-200);border:1px solid #D5E2EE;border-radius:16px;
+    padding:clamp(10px,2.6vw,16px);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;
+    aspect-ratio:16/10;overflow:hidden;
+  }
+  .illust::before{content:"挿絵をここに配置できます";color:var(--bluegray);font-size:clamp(12px,3.8vw,14px);opacity:.7}
+
+  .body{display:grid;gap:clamp(8px,2.4vw,14px)}
+  .lead{font-size:clamp(14px,4.4vw,18px);color:var(--bluegray)}
+  ul.key{margin:0;padding-left:1.2em;font-size:clamp(15px,4.8vw,19px);line-height:1.5}
+  ul.key li{margin:.2em 0}
+  .note{font-size:clamp(12px,3.8vw,14px);color:var(--gray)}
+
+  /* 小注＋モーダル */
+  small.anno{display:block;margin-top:.15em;font-size:clamp(11px,3.6vw,13px);color:var(--gray)}
+  .anno label{cursor:pointer;text-decoration:underline}
+  .modal-toggle{display:none}
+  .modal{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:999;
+    background:rgba(11,53,88,.45); backdrop-filter:saturate(120%) blur(2px);
+  }
+  .modal .dialog{
+    width:calc(100% - 32px); max-width:520px; background:#fff; border-radius:16px;
+    box-shadow:var(--shadow); padding:18px 16px 14px;
+  }
+  .modal .dialog h2{margin:0 0 6px;font-size:18px}
+  .modal .dialog p{margin:0 0 10px;font-size:14px;color:#234}
+  .modal .footer{display:flex;justify-content:flex-end}
+  .btn-close{display:inline-block;background:#EEF4FB;color:var(--blue);border:1px solid #D8E6F7;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .modal-toggle:checked + .modal{display:flex}
+
+  .cta-row{margin-top:auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .btn{flex:1;text-align:center;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;
+    font-size:clamp(15px,4.8vw,18px);padding:14px 16px;border-radius:14px;border:0;box-shadow:0 6px 14px rgba(22,101,193,.25);cursor:pointer}
+  .btn.subtle{background:#EEF4FB;color:var(--blue);box-shadow:none;border:1px solid #D8E6F7}
+
+  .pager{position:absolute;left:0;right:0;bottom:8px;display:flex;gap:8px;justify-content:center;align-items:center}
+  .dot{width:10px;height:10px;border-radius:50%;background:#c9d6e6;border:1px solid #b7c6d8;cursor:pointer}
+  #p1:checked ~ .pager label[for="p1"],
+  #p2:checked ~ .pager label[for="p2"],
+  #p3:checked ~ .pager label[for="p3"],
+  #p4:checked ~ .pager label[for="p4"],
+  #p5:checked ~ .pager label[for="p5"]{background:var(--blue);border-color:var(--blue-600)}
+
+  @media (max-height:560px){.illust{aspect-ratio:16/11}.btn{padding:12px}}
+</style>
+</head>
+<body>
+  <main class="app" aria-label="オンライン服薬指導 5枚ページ">
+    <!-- ページ状態 -->
+    <input type="radio" id="p1" name="page" checked>
+    <input type="radio" id="p2" name="page">
+    <input type="radio" id="p3" name="page">
+    <input type="radio" id="p4" name="page">
+    <input type="radio" id="p5" name="page">
+
+    <div class="slides">
+      <!-- 1枚目：注釈・ポップなし -->
+      <section class="screen" id="s1" role="region" aria-labelledby="ttl1">
+        <header><div class="brand"><span class="dot" aria-hidden="true"></span>Online Medication</div></header>
+        <h1 id="ttl1">オンライン服薬指導は4ステップ</h1>
+        <figure class="illust" aria-label="挿絵枠（後で画像可）"></figure>
+        <div class="body">
+          <p class="lead">短時間・非対面・安全にお薬を受け取れます。</p>
+          <ul class="key">
+            <li>① 受診・処方箋の発行</li>
+            <li>② アプリで予約</li>
+            <li>③ ビデオで服薬指導</li>
+            <li>④ クレカ決済・受け取り</li>
+          </ul>
+        </div>
+        <div class="cta-row"><label for="p2" class="btn" aria-label="次へ">手順を見る</label></div>
+      </section>
+
+      <!-- 2枚目 -->
+      <section class="screen" id="s2" role="region" aria-labelledby="ttl2">
+        <header><div class="brand"><span class="dot" aria-hidden="true"></span>Step 1</div><label for="p1" class="btn subtle">戻る</label></header>
+        <h1 id="ttl2">事前準備と処方箋の要件</h1>
+        <figure class="illust" aria-label="挿絵枠（後で画像可）"></figure>
+        <div class="body">
+          <ul class="key">
+            <li>準備物：スマホ・通信環境／保険証類／クレジットカード
+              <small class="anno"><label for="mp2-1">注：推奨の端末・回線</label></small>
+            </li>
+            <li>処方箋：発行日を含め<strong>4日以内</strong>
+              <small class="anno"><label for="mp2-2">注：期限の起算と例外</label></small>
+            </li>
+            <li>原本は指導前に薬局到着（電子は処方箋ID＋確認番号）
+              <small class="anno"><label for="mp2-3">注：紙／電子の扱い</label></small>
+            </li>
+          </ul>
+          <p class="note">通信費はご利用者負担。<small class="anno"><label for="mp2-4">注：データ通信の目安</label></small></p>
+        </div>
+        <div class="cta-row"><label for="p3" class="btn">予約へ進む</label></div>
+      </section>
+
+      <!-- 3枚目 -->
+      <section class="screen" id="s3" role="region" aria-labelledby="ttl3">
+        <header><div class="brand"><span class="dot" aria-hidden="true"></span>Step 2</div><label for="p2" class="btn subtle">戻る</label></header>
+        <h1 id="ttl3">予約（営業時間内）</h1>
+        <figure class="illust" aria-label="挿絵枠（後で画像可）"></figure>
+        <div class="body">
+          <ul class="key">
+            <li>当日枠は空き次第
+              <small class="anno"><label for="mp3-1">注：当日受付の基準</label></small>
+            </li>
+            <li>日時の変更・キャンセル可
+              <small class="anno"><label for="mp3-2">注：締切とペナルティ</label></small>
+            </li>
+            <li>家族同席可（同じ画面で確認可能）
+              <small class="anno"><label for="mp3-3">注：同席の方法と注意</label></small>
+            </li>
+          </ul>
+          <p class="note">セキュリティ：通信は暗号化。<small class="anno"><label for="mp3-4">注：暗号化の概要</label></small></p>
+        </div>
+        <div class="cta-row"><label for="p4" class="btn">この日時で予約</label></div>
+      </section>
+
+      <!-- 4枚目 -->
+      <section class="screen" id="s4" role="region" aria-labelledby="ttl4">
+        <header><div class="brand"><span class="dot" aria-hidden="true"></span>Step 3</div><label for="p3" class="btn subtle">戻る</label></header>
+        <h1 id="ttl4">ビデオ指導のポイント</h1>
+        <figure class="illust" aria-label="挿絵枠（後で画像可）"></figure>
+        <div class="body">
+          <ul class="key">
+            <li>カメラオンと本人確認は必須
+              <small class="anno"><label for="mp4-1">注：本人確認書類</label></small>
+            </li>
+            <li>服薬内容・副作用・受け取り方法を確認
+              <small class="anno"><label for="mp4-2">注：確認される主項目</label></small>
+            </li>
+            <li>対象外の薬：麻薬・向精神薬など
+              <small class="anno"><label for="mp4-3">注：対象外の理由</label></small>
+            </li>
+          </ul>
+          <p class="note">公費の自己負担上限額管理票の方は対象外。<small class="anno"><label for="mp4-4">注：対象外となる公費</label></small></p>
+        </div>
+        <div class="cta-row"><label for="p5" class="btn">決済・受け取りへ</label></div>
+      </section>
+
+      <!-- 5枚目 -->
+      <section class="screen" id="s5" role="region" aria-labelledby="ttl5">
+        <header><div class="brand"><span class="dot" aria-hidden="true"></span>Step 4</div><label for="p4" class="btn subtle">戻る</label></header>
+        <h1 id="ttl5">決済と受け取り</h1>
+        <figure class="illust" aria-label="挿絵枠（後で画像可）"></figure>
+        <div class="body">
+          <ul class="key">
+            <li>支払い：クレジットカード
+              <small class="anno"><label for="mp5-1">注：対応ブランドと失敗時</label></small>
+            </li>
+            <li>料金例：利用料1,000円＋薬代＋送料
+              <small class="anno"><label for="mp5-2">注：金額の内訳と変動要因</label></small>
+            </li>
+            <li>配送：通常1–2日／お急ぎ便は条件により当日
+              <small class="anno"><label for="mp5-3">注：地域差・時間帯指定</label></small>
+            </li>
+            <li>受け取り：配送または店舗
+              <small class="anno"><label for="mp5-4">注：不在時・再配達</label></small>
+            </li>
+          </ul>
+          <p class="note">詳しい注意事項・FAQは別ページへ。<small class="anno"><label for="mp5-5">注：リンクの場所</label></small></p>
+        </div>
+        <div class="cta-row"><label for="p1" class="btn">最初に戻る</label></div>
+      </section>
+    </div>
+
+    <!-- p2 -->
+<input id="mp2-1" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>推奨の端末・回線</h2><p>前面カメラ付きのスマホをご用意ください。最新OSと安定したWi-Fi推奨、4G/5Gでも利用可能です。静かな場所でどうぞ。</p><div class="footer"><label class="btn-close" for="mp2-1">閉じる</label></div></div></aside>
+<input id="mp2-2" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>期限の起算と例外</h2><p>処方箋は発行日を含め4日以内が有効です。土日祝も数えます。受診日が1日目。期限切れは再受診が必要になります。</p><div class="footer"><label class="btn-close" for="mp2-2">閉じる</label></div></div></aside>
+<input id="mp2-3" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>紙／電子の扱い</h2><p>紙は指導前までに薬局到着が必要です。電子は処方箋IDと確認番号の提示で受付します。取り違え防止にご協力ください。</p><div class="footer"><label class="btn-close" for="mp2-3">閉じる</label></div></div></aside>
+<input id="mp2-4" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>データ通信の目安</h2><p>ビデオ10分で数十MB程度が目安です。Wi-Fiのご利用をおすすめします。モバイル回線の通信料はお客様負担です。</p><div class="footer"><label class="btn-close" for="mp2-4">閉じる</label></div></div></aside>
+
+<!-- p3 -->
+<input id="mp3-1" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>当日受付の基準</h2><p>当日枠は薬剤師の空きと処方箋到着の確認後に確定します。時間に余裕を持ってご予約ください。</p><div class="footer"><label class="btn-close" for="mp3-1">閉じる</label></div></div></aside>
+<input id="mp3-2" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>締切とペナルティ</h2><p>直前の変更や無断キャンセルは次回予約に制限がかかる場合があります。締切時刻は予約画面でご確認ください。</p><div class="footer"><label class="btn-close" for="mp3-2">閉じる</label></div></div></aside>
+<input id="mp3-3" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>同席の方法と注意</h2><p>ご家族は同室または同一端末で同席可能です。個人情報を含むため周囲に配慮し、イヤホンの使用を推奨します。</p><div class="footer"><label class="btn-close" for="mp3-3">閉じる</label></div></div></aside>
+<input id="mp3-4" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>暗号化の概要</h2><p>通信はTLS等で暗号化されています。公共Wi-Fiではアドレス欄のhttps表示をご確認ください。</p><div class="footer"><label class="btn-close" for="mp3-4">閉じる</label></div></div></aside>
+
+<!-- p4 -->
+<input id="mp4-1" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>本人確認書類</h2><p>開始時にお名前の確認を行います。健康保険証や運転免許証のご提示をお願いする場合があります。</p><div class="footer"><label class="btn-close" for="mp4-1">閉じる</label></div></div></aside>
+<input id="mp4-2" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>確認される主項目</h2><p>用法用量、副作用の兆候、併用薬、保管方法、受け取り方法などを確認します。気になる点は遠慮なくお尋ねください。</p><div class="footer"><label class="btn-close" for="mp4-2">閉じる</label></div></div></aside>
+<input id="mp4-3" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>対象外の理由</h2><p>麻薬・向精神薬など一部の薬は規制や安全管理上、オンラインでは対応できません。店頭受け取りをご案内します。</p><div class="footer"><label class="btn-close" for="mp4-3">閉じる</label></div></div></aside>
+<input id="mp4-4" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>対象外となる公費</h2><p>自己負担上限額管理票をお持ちの方は、運用上オンライン対象外となる場合があります。個別にご相談ください。</p><div class="footer"><label class="btn-close" for="mp4-4">閉じる</label></div></div></aside>
+
+<!-- p5 -->
+<input id="mp5-1" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>対応ブランドと失敗時</h2><p>主要ブランドのクレジットカードに対応しています。決済失敗時は再試行や別手段をご案内します。</p><div class="footer"><label class="btn-close" for="mp5-1">閉じる</label></div></div></aside>
+<input id="mp5-2" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>金額の内訳と変動要因</h2><p>利用料は自費、薬代は保険適用、送料は地域や方法で変動します。合計金額は決済前に画面でご確認ください。</p><div class="footer"><label class="btn-close" for="mp5-2">閉じる</label></div></div></aside>
+<input id="mp5-3" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>地域差・時間帯指定</h2><p>配送は通常1〜2日です。離島や山間部は日数がかかります。時間帯指定や速達は追加料金となる場合があります。</p><div class="footer"><label class="btn-close" for="mp5-3">閉じる</label></div></div></aside>
+<input id="mp5-4" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>不在時・再配達</h2><p>不在時は再配達をご利用ください。置き配はできない場合があります。店舗受け取りへの変更も承ります。</p><div class="footer"><label class="btn-close" for="mp5-4">閉じる</label></div></div></aside>
+<input id="mp5-5" class="modal-toggle" type="checkbox"><aside class="modal"><div class="dialog"><h2>リンクの場所</h2><p>詳しい手順や注意点は薬局サイトの「ご利用ガイド」「よくある質問」に掲載しています。リンクからご確認ください。</p><div class="footer"><label class="btn-close" for="mp5-5">閉じる</label></div></div></aside>
+
+    <!-- ページドット -->
+    <div class="pager" aria-label="ページナビゲーション">
+      <label class="dot" for="p1" aria-label="1枚目"></label>
+      <label class="dot" for="p2" aria-label="2枚目"></label>
+      <label class="dot" for="p3" aria-label="3枚目"></label>
+      <label class="dot" for="p4" aria-label="4枚目"></label>
+      <label class="dot" for="p5" aria-label="5枚目"></label>
+    </div>
+  </main>
+</body>
+</html>
